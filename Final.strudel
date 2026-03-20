@@ -1,0 +1,103 @@
+setcpm(60) 
+const lpf = slider(733,0,1000) 
+const gain = slider(0.85,0,2) 
+
+// Functions
+let scatter = (p) => p.scramble(10).iter(2)
+let transpose = (p) => p.scale('C:major').scaleTranspose("<0 0 -1 -1 -2 -2 0 0>")
+let transposeend = (p) => p.scale('C:major').scaleTranspose("<0 0 -1 -1 -2 -2 0 [0|-7]>")
+
+// Rythm components
+const lowtom = sound("bd bd bd bd").sound("microrhythmer12_bd")
+const clap1 = sound("<[cp ~ cp cp] [~ cp ~ ~]>").lpf(lpf).gain(gain)
+const clap2 = sound("<[cp ~ cp cp], [~ cp ~ ~]>").lpf(lpf).gain(gain)
+const bass = sound("bd ~ ~ [bd bd]").sound("moogconcertmatemg1_bd")
+
+const rythmlayer1 = stack(lowtom, clap1)
+const rythmlayer2 = stack(lowtom, clap1, bass)
+const claps = cat(clap1, clap2)
+const rythmlayerclaps = stack(rythmlayer2, claps)
+
+// Melody components
+/*
+Chords from Pheobe: [d4,f#4,a4,c5] [g4,b4,d4,f5] [c4,e4,g4,b5]
+*/
+const melody1 = note("[c5 ~ ~ ~ c5 ~ c5 ~], [d4@2 ~ ~ d4 ~ d4 ~], [f#4@3 ~ f#4 ~ f#4 ~]").sound("wt_digital_echoes").rev()
+const melody2 = note("[f5 ~ ~ ~ f5 ~ f5 ~],[d4@2 ~ ~ d4 ~ d4 ~], [b4@3 ~ b4 ~ b4 ~]").sound("wt_digital_echoes")
+const melody1scattered = melody1.scramble(2)
+const melody2scattered = melody2.scramble(2)
+
+const melodyloop1transposed = transpose(cat(melody1, melody2))
+const melodyscattran = transpose(cat(melody1scattered, melody2scattered))
+
+//rythm and melody combinations
+const lowtomandmel = stack(lowtom, melodyloop1transposed)
+const layer1andmel = stack(rythmlayer1, melodyloop1transposed)
+const rythmandmel = stack(rythmlayer2, melodyloop1transposed)
+const rythmandmelscat = stack(rythmlayer2, melodyscattran)
+const allandmel = stack(rythmlayerclaps, melodyscattran)
+
+const melout = stack(rythmlayerclaps, transposeend(cat(melody1scattered, melody2scattered)))
+
+// arpeggios
+const arpeggio = [
+  "{c3 e3 g3 c4 c5 e5 g5 c6}%16",
+  "{e3 g3 c3 e4 e5 g5 c5 e6}%16",
+  "{g2 c3  e3 g3 g4 c5 e5 g5}%16",
+]
+const arp1 = note("<0 1 2 1>".pick(arpeggio)).sound("sin").lpf(300).gain(2).room(0.6).slow(2)
+const arpscat = scatter(arp1)
+
+const arp1tran = transpose(arp1)
+const arp1scattran = transpose(arpscat)
+
+//rythm + arpeggio
+const lowtomarp = stack(lowtom, arp1tran)
+const layer1arp = stack(rythmlayer1, arp1tran)
+const rythmandarp = stack(rythmlayer2, arp1tran)
+const rythmandarpscat = stack(rythmlayer2, arp1scattran)
+const allandarp = stack(rythmlayerclaps, arp1scattran)
+
+// all
+const alltogether = stack(allandarp, melodyscattran)
+
+//end
+//???
+
+// Change to choose which part is playing 
+const Track =  0
+
+// functionality to play the parts 
+const playStep = step => Array.isArray(step) ? stack(...step) : step 
+
+// Library of parts, can play multiple parts at once  
+const orders = [ 
+  // rythm only
+  [lowtom],                             // 0
+  [claps],                              // 1
+  [rythmlayer1],                        // 2
+  [rythmlayer2],                        // 3
+  [rythmlayerclaps],                    // 4
+  // melody only
+  [melodyloop1transposed],              // 5
+  [melodyscattran],                     // 6
+  // arpeggios only
+  [arp1tran],                           // 7
+  [arp1scattran],                       // 8
+  // melody + rythm
+  [lowtomandmel],                       // 9
+  [layer1andmel],                       // 10
+  [rythmandmel],                        // 11
+  [rythmandmelscat],                    // 12
+  [allandmel],                          // 13
+  //arpeggios + rythm
+  [lowtomarp],                          // 14
+  [layer1arp],                          // 15
+  [rythmandarp],                        // 16
+  [allandarp],                          // 17
+  //everything
+  [alltogether],                        // 18
+] 
+
+// Strudel plays the part based on the userInput constant 
+cat(...orders[Track].map(playStep)) 
