@@ -1,15 +1,17 @@
-setcpm(30)
+setcpm(29)
 
 //Like a virgin!
 let transpose = register('transpose', (pat) => pat.scale('F:major').scaleTranspose("<0 -1 -1.5 -1>"))
 
 const first = stack (
-  sound("[bd hh](2,4)*4"),
+  sound("[bd ~ ~ ~]*2").gain(2).sound("9000_bd"),
+  sound("[~ ~ rd ~]*2").gain(1.5).sound("bossdr550_rd").release(0.1),
   note("F#3 Eb3 Db3 F#3 F#3 Eb3 Db3 Eb3").sound("sin").gain(1.5),
 )
-const second = stack(
-  first,
-  note("[~ F#6] [~ F#6] ~ ~ ,[~ A#6] [~ A#6] ~ ~ , [~ C#6] [~ C#6] ~ ~ ").release(0.01).sound("gm_lead_8_bass_lead").lpf(2000)
-).mask("<0 0 1 1>")
+let jab = note("[~ F#5] [~ F#5] ~ ~ ,[~ A#5] [~ A#5] ~ ~ , [~ C#6] [~ C#6] ~ ~ ")
+  .release(0.01).sound("gm_voice_oohs").lpf(1000).mask("<0 0 1 1 1 1 1 1 1>")
 
-$: stack(first, second)
+const drum = sound("< ~ ~ ~ ~ ~ ~ ~ [[lt lt lt] ~ lt ~]>").fast(2).mask("<0 1>")
+const melshort = note("~ ~ ~ [c#4 d#4 f#4 d#4]").sound("square").release(0.1).gain(0.4)
+
+$: stack(first, jab, drum, melshort)
